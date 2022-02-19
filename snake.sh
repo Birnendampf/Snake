@@ -23,8 +23,8 @@
 		printf "${red}%b${reset}\n" "$@"
 	}
 
-SIZEY=63
-SIZEX=202
+SIZEX=${1:-40}
+SIZEY=${2:-20}
 LENGTH=4
 touch /tmp/snake
 (( POSY[0]=(SIZEY+1)/2))
@@ -131,7 +131,7 @@ while true; do
     exit
   fi
   update
-  sleep 1
+  sleep ${3:-0.15}
 done &
 
 # read input
