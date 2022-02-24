@@ -31,10 +31,11 @@ touch /tmp/snake
 (( POSX[0]=(SIZEX+1)/2))
 statusbar() {
   printf "\033[$(( SIZEY+1 ))H\033[47m\033[30m\033[0K%b${reset}" "$*"
+  echo -en "\033]0;$*\a"
 }
 update() {
-  printf "\033[${POSY[${#POSY[@]} - 1]};${POSX[${#POSX[@]} - 1]}H%b" "x"
-  # statusbar "X: ${POSY[${#POSY[@]} - 1]} Y: ${POSX[${#POSX[@]} - 1]} Score: $(( LENGTH-4 ))"
+  printf "\033[${POSY[${#POSY[@]} - 1]};${POSX[${#POSX[@]} - 1]}H\033[102m${blue}%b" "${ARROW}"
+  statusbar "(${POSY[${#POSY[@]} - 1]}|${POSX[${#POSX[@]} - 1]}) $(( LENGTH-4 ))"
 
 }
 trap trapfunction 0
@@ -46,10 +47,26 @@ trapfunction() {
 }
 move() {
   case $1 in
-    w) POSY1=($(( POSY[${#POSY[@]} - 1]-1 ))); POSX1+=(${POSX[${#POSX[@]} - 1]});;
-    a) POSX1=($(( POSX[${#POSX[@]} - 1]-1 ))); POSY1+=(${POSY[${#POSY[@]} - 1]});;
-    s) POSY1=($(( POSY[${#POSY[@]} - 1]+1 ))); POSX1+=(${POSX[${#POSX[@]} - 1]});;
-    d) POSX1=($(( POSX[${#POSX[@]} - 1]+1 ))); POSY1+=(${POSY[${#POSY[@]} - 1]});;
+    w)
+      POSY1=($(( POSY[${#POSY[@]} - 1]-1 )))
+      POSX1+=(${POSX[${#POSX[@]} - 1]})
+      ARROW="▲"
+      ;;
+    a)
+      POSX1=($(( POSX[${#POSX[@]} - 1]-1 )))
+      POSY1+=(${POSY[${#POSY[@]} - 1]})
+      ARROW="◀"
+      ;;
+    s)
+      POSY1=($(( POSY[${#POSY[@]} - 1]+1 )))
+      POSX1+=(${POSX[${#POSX[@]} - 1]})
+      ARROW="▼"
+      ;;
+    d)
+      POSX1=($(( POSX[${#POSX[@]} - 1]+1 )))
+      POSY1+=(${POSY[${#POSY[@]} - 1]})
+      ARROW="▶"
+      ;;
   esac
 }
 test_pos() {
@@ -68,12 +85,13 @@ spawn_apple() {
         APPLEY=$(jot -r 1 1 ${SIZEY})
         APPLEX=$(jot -r 1 1 ${SIZEX})
       done
-      printf "\033[${APPLEY};${APPLEX}H${green}%b${reset}" ""
+      printf "\033[${APPLEY};${APPLEX}H\033[102m\033[32m%b${reset}" ""
 }
 
 printf "\033[8;$(( SIZEY+1 ));${SIZEX}t"
 unset LOCK
 unset REPLY
+printf "\033[102m"
 clear
 update
 
@@ -109,29 +127,30 @@ while true; do
 
   # cut off length
   if (( ${#POSY[@]} > ${LENGTH} )); then
-    printf "\033[${POSY[0]};${POSX[0]}H%b" " "
+    printf "\033[${POSY[0]};${POSX[0]}H\033[102m%b" " "
     POSX=(${POSX[@]:1})
     POSY=(${POSY[@]:1})
   fi
   # wall collision
   if [[ ${POSY[${#POSY[@]} - 1]} -lt 1 || ${POSX[${#POSX[@]} - 1]} -lt 1 || ${POSY[${#POSY[@]} - 1]} -gt ${SIZEY} || ${POSX[${#POSX[@]} - 1]} -gt ${SIZEX} ]]; then
-    clear
-    printf "\033[8;11;78t\033[3;2H"
+    printf "${reset}\033[2J\033[8;11;78t\033[3H"
+    # clear
     error \
-    " ██████╗  █████╗ ███╗   ███╗███████╗     ██████╗ ██╗   ██╗███████╗██████╗ " \
-    "██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔═══██╗██║   ██║██╔════╝██╔══██╗" \
-    "██║  ███╗███████║██╔████╔██║█████╗      ██║   ██║██║   ██║█████╗  ██████╔╝" \
-    "██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗" \
-    "╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ╚██████╔╝ ╚████╔╝ ███████╗██║  ██║" \
-    " ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝     ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝" \
-    "                               \033[5mSCORE: $(( LENGTH-4 ))              "
+    "   ██████╗  █████╗ ███╗   ███╗███████╗     ██████╗ ██╗   ██╗███████╗██████╗ " \
+    "  ██╔════╝ ██╔══██╗████╗ ████║██╔════╝    ██╔═══██╗██║   ██║██╔════╝██╔══██╗" \
+    "  ██║  ███╗███████║██╔████╔██║█████╗      ██║   ██║██║   ██║█████╗  ██████╔╝" \
+    "  ██║   ██║██╔══██║██║╚██╔╝██║██╔══╝      ██║   ██║╚██╗ ██╔╝██╔══╝  ██╔══██╗" \
+    "  ╚██████╔╝██║  ██║██║ ╚═╝ ██║███████╗    ╚██████╔╝ ╚████╔╝ ███████╗██║  ██║" \
+    "   ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝     ╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═╝" \
+    "                                   \033[5mSCORE: $(( LENGTH-4 ))           "
     sleep 3
+    echo -en "\033]0;\a"
     clear
     kill $$
     exit
   fi
   update
-  sleep ${3:-0.15}
+  sleep ${3:-0.13}
 done &
 
 # read input
